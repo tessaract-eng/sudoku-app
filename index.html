@@ -3,81 +3,133 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Minimal Sudoku</title>
+    <title>Polished Sudoku</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <div id="resume-modal" class="modal hidden">
-            <div class="modal-content">
-                <h3>Saved Game Detected</h3>
-                <p>Would you like to resume your previous game or start a fresh one?</p>
-                <div class="modal-buttons">
-                    <button id="btn-resume" class="btn primary">Continue Game</button>
-                    <button id="btn-new-past" class="btn secondary">New Game</button>
+    <div class="app-container">
+        <!-- Confetti Canvas for Victory -->
+        <canvas id="confetti-canvas" class="hidden"></canvas>
+
+        <!-- Screen 1: Splash / Menu -->
+        <div id="screen-splash" class="screen">
+            <div class="splash-content">
+                <div class="logo">
+                    <span class="logo-box">5</span>
+                    <span class="logo-box">3</span>
+                    <span class="logo-box">9</span>
+                </div>
+                <h1 class="splash-title">SUDOKU</h1>
+                <p class="splash-subtitle">Clean & Minimal</p>
+                
+                <div class="splash-actions">
+                    <button id="btn-resume-game" class="btn primary hidden">Continue Game</button>
+                    <button id="btn-show-difficulties" class="btn secondary">New Game</button>
+                </div>
+                
+                <div id="difficulty-menu" class="difficulty-menu hidden">
+                    <button class="diff-option" data-diff="easy">Easy</button>
+                    <button class="diff-option" data-diff="medium">Medium</button>
+                    <button class="diff-option" data-diff="hard">Hard</button>
+                    <button class="diff-option" data-diff="expert">Expert</button>
+                    <button class="diff-option" data-diff="master">Master</button>
+                    <button class="diff-option" data-diff="extreme">Extreme</button>
                 </div>
             </div>
         </div>
 
-        <header>
-            <div class="controls-top">
-                <select id="difficulty-select">
-                    <option value="easy">Easy</option>
-                    <option value="medium" selected>Medium</option>
-                    <option value="hard">Hard</option>
-                </select>
-                <button id="btn-new" class="btn secondary">New Game</button>
-            </div>
-            
-            <div class="status-bar">
-                <div id="timer" class="timer">00:00</div>
-                <button id="btn-pause" class="btn-icon" title="Pause Game">
-                    <svg id="pause-icon" viewBox="0 0 24 24" width="18" height="18"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+        <!-- Screen 2: Active Game -->
+        <div id="screen-game" class="screen hidden">
+            <header class="game-header">
+                <button id="btn-back-to-menu" class="btn-icon" title="Main Menu">
+                    <svg viewBox="0 0 24 24" width="22" height="22"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
                 </button>
-                <div id="hint-count" class="hint-count">Hints: 3/3</div>
-            </div>
-        </header>
-
-        <main>
-            <div id="sudoku-board" class="board"></div>
-            
-            <div id="pause-overlay" class="overlay hidden">
-                <div class="overlay-content">
-                    <p>Game Paused</p>
-                    <button id="btn-resume-icon" class="btn primary">Resume</button>
+                <div class="hud-item">
+                    <span class="hud-label">Difficulty</span>
+                    <span id="hud-difficulty" class="hud-value">Hard</span>
                 </div>
-            </div>
-            
-            <div id="win-overlay" class="overlay hidden">
-                <div class="overlay-content">
-                    <h2>Solved!</h2>
-                    <p id="win-time">Final Time: 00:00</p>
-                    <button id="btn-win-close" class="btn primary">Play Again</button>
+                <div class="hud-item">
+                    <span class="hud-label">Mistakes</span>
+                    <span id="hud-mistakes" class="hud-value">0/3</span>
                 </div>
-            </div>
-        </main>
+                <div class="hud-item status-time">
+                    <span id="hud-timer" class="timer">00:00</span>
+                    <button id="btn-pause" class="btn-icon-small">
+                        <svg id="pause-icon" viewBox="0 0 24 24" width="14" height="14"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                    </button>
+                </div>
+            </header>
 
-        <div class="action-panel">
-            <button id="btn-check" class="btn action-btn">Check</button>
-            <button id="btn-notes" class="btn action-btn toggle-btn">
-                Notes: <span id="notes-status">OFF</span>
-            </button>
-            <button id="btn-hint" class="btn action-btn">Hint</button>
+            <main class="board-wrapper">
+                <div id="sudoku-board" class="board"></div>
+                
+                <!-- Inner Screen States -->
+                <div id="pause-overlay" class="overlay hidden">
+                    <div class="overlay-content">
+                        <h3>Game Paused</h3>
+                        <button id="btn-resume" class="btn primary">Resume Play</button>
+                    </div>
+                </div>
+            </main>
+
+            <div class="action-panel">
+                <button id="btn-undo" class="action-btn">
+                    <div class="icon-wrapper"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M12.5 8c-2.65 0-5.05.99-6.9 2.6L2 7v9h9l-3.62-3.62c1.39-1.16 3.16-1.88 5.12-1.88 3.54 0 6.55 2.31 7.6 5.5l2.37-.78C21.08 11.03 17.15 8 12.5 8z"/></svg></div>
+                    <span>Undo</span>
+                </button>
+                <button id="btn-erase" class="action-btn">
+                    <div class="icon-wrapper"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M16.24 3.56L21.19 8.5c.39.39.39 1.02 0 1.41L13.41 17.7c-.39.39-1.02.39-1.41 0L7.05 12.75c-.39-.39-.39-1.02 0-1.41l7.78-7.78c.39-.39 1.02-.39 1.41 0zM3 21h18v-2H3v2z"/></svg></div>
+                    <span>Erase</span>
+                </button>
+                <button id="btn-notes" class="action-btn">
+                    <div class="icon-wrapper">
+                        <svg viewBox="0 0 24 24" width="20" height="20"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+                        <span id="notes-badge" class="badge">OFF</span>
+                    </div>
+                    <span>Notes</span>
+                </button>
+                <button id="btn-hint" class="action-btn">
+                    <div class="icon-wrapper">
+                        <svg viewBox="0 0 24 24" width="20" height="20"><path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7zm2.85 11.1l-.85.6V16h-4v-1.3l-.85-.6C7.8 13.1 7 11.14 7 9c0-2.76 2.24-5 5-5s5 2.24 5 5c0 2.14-.8 4.1-2.15 5.1z"/></svg>
+                        <span id="hint-badge" class="badge-count">3</span>
+                    </div>
+                    <span>Hint</span>
+                </button>
+            </div>
+
+            <div class="keypad">
+                <button class="key-btn" data-val="1">1</button>
+                <button class="key-btn" data-val="2">2</button>
+                <button class="key-btn" data-val="3">3</button>
+                <button class="key-btn" data-val="4">4</button>
+                <button class="key-btn" data-val="5">5</button>
+                <button class="key-btn" data-val="6">6</button>
+                <button class="key-btn" data-val="7">7</button>
+                <button class="key-btn" data-val="8">8</button>
+                <button class="key-btn" data-val="9">9</button>
+            </div>
         </div>
 
-        <div class="keypad">
-            <button class="key-btn" data-val="1">1</button>
-            <button class="key-btn" data-val="2">2</button>
-            <button class="key-btn" data-val="3">3</button>
-            <button class="key-btn" data-val="4">4</button>
-            <button class="key-btn" data-val="5">5</button>
-            <button class="key-btn" data-val="6">6</button>
-            <button class="key-btn" data-val="7">7</button>
-            <button class="key-btn" data-val="8">8</button>
-            <button class="key-btn" data-val="9">9</button>
-            <button class="key-btn erase-btn" data-val="erase">
-                <svg viewBox="0 0 24 24" width="20" height="20"><path d="M22 3H7c-.69 0-1.23.35-1.59.88L0 12l5.41 8.11c.36.53.9.89 1.59.89h15c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H7.07L2.4 12l4.66-7H22v14zm-11.59-2L14 13.41 17.59 17 19 15.59 15.41 12 19 8.41 17.59 7 14 10.59 10.41 7 9 8.41 12.59 12 9 15.59 10.41 17z"/></svg>
-            </button>
+        <!-- Screen 3: End Summary (Win / Game Over) -->
+        <div id="screen-summary" class="screen hidden">
+            <div class="summary-content">
+                <h2 id="summary-title">Solved!</h2>
+                <div class="summary-card">
+                    <div class="summary-row">
+                        <span>Difficulty</span>
+                        <span id="sum-difficulty" class="sum-value">-</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>Time Taken</span>
+                        <span id="sum-time" class="sum-value">00:00</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>Mistakes Made</span>
+                        <span id="sum-mistakes" class="sum-value">0/3</span>
+                    </div>
+                </div>
+                <button id="btn-summary-restart" class="btn primary">Play Another Game</button>
+            </div>
         </div>
     </div>
     <script src="script.js"></script>
